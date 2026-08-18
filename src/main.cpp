@@ -37,7 +37,7 @@
 #include <SD.h>
 #include <WiFi.h>
 #include <esp_adc_cal.h>
-#include <RtcDrv.hpp>          // SensorLib: SensorPCF8563 + RTC_DateTime
+#include <SensorPCF8563.hpp>   // SensorLib: SensorPCF8563 + RTC_DateTime
 #include <Button2.h>
 
 #include "epd_driver.h"
