@@ -42,25 +42,64 @@ ticking.
 
 ## Build & flash
 
-Requires [PlatformIO](https://platformio.org/) (VS Code extension or CLI).
+The e-paper driver, fonts, and pin map come straight from
+[Xinyuan-LilyGO/LilyGo-EPD47](https://github.com/Xinyuan-LilyGO/LilyGo-EPD47)
+(`esp32s3` branch — **not** `master`, which targets the older
+ESP32-WROVER board and has the wrong pins for this one); RTC support
+comes from [lewisxhe/SensorLib](https://github.com/lewisxhe/SensorLib);
+the optional button uses
+[LennartHennigs/Button2](https://github.com/LennartHennigs/Button2).
+Pick whichever build tool you prefer — both use the same `setup()`/`loop()`
+code.
+
+### Option A: PlatformIO (VS Code extension or CLI)
+
+Everything is pre-configured in `platformio.ini` / `boards/T5-ePaper-S3.json`
+(16MB flash, OPI PSRAM, USB-CDC). Open the repo root folder in VS Code with
+the PlatformIO extension installed, plug in the board, then either click the
+Upload (→) icon in the blue status bar, or from the CLI:
 
 ```sh
 pio run -t upload
 pio device monitor
 ```
 
-The `boards/T5-ePaper-S3.json` file and `platformio.ini` are already set
-up for 16MB flash / OPI PSRAM / USB-CDC, matching LilyGo's own board
-definition. The e-paper driver, fonts, and pin map come straight from
-[Xinyuan-LilyGO/LilyGo-EPD47](https://github.com/Xinyuan-LilyGO/LilyGo-EPD47)
-(`esp32s3` branch); RTC support comes from
-[lewisxhe/SensorLib](https://github.com/lewisxhe/SensorLib); the optional
-button uses [LennartHennigs/Button2](https://github.com/LennartHennigs/Button2).
+### Option B: Arduino IDE
+
+Use the sketch in `arduino/LilyGo-Test-Code/LilyGo-Test-Code.ino` (identical
+code to `src/main.cpp`, just laid out the way Arduino IDE expects — one
+folder, one `.ino` file with the same name).
+
+1. **Install ESP32 board support**: File → Preferences → paste this into
+   "Additional Boards Manager URLs":
+   `https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json`
+   Then Tools → Board → Boards Manager → search **esp32** → install
+   "esp32 by Espressif Systems".
+2. **Install the display library manually** (do not use the Library Manager
+   search for this one — it can pull the wrong board variant):
+   go to the [`esp32s3` branch](https://github.com/Xinyuan-LilyGO/LilyGo-EPD47/tree/esp32s3) →
+   Code → Download ZIP. Then in Arduino IDE: Sketch → Include Library →
+   Add .ZIP Library... → select the downloaded zip.
+3. **Install the other two libraries via Library Manager**
+   (Sketch → Include Library → Manage Libraries): search **SensorLib**
+   (by lewis he) → Install; search **Button2** (by Lennart Hennigs) → Install.
+4. **Open the sketch**: File → Open → `arduino/LilyGo-Test-Code/LilyGo-Test-Code.ino`.
+5. **Set Tools menu options** (these replicate `boards/T5-ePaper-S3.json`):
+   - Board: **ESP32S3 Dev Module**
+   - USB CDC On Boot: **Enabled**
+   - **PSRAM: OPI PSRAM** ← critical, leaving this "Disabled" will crash on boot
+   - Flash Size: **16MB (128Mb)**
+   - Partition Scheme: any "16M Flash" option
+   - Upload Speed: 921600
+6. Plug in the board via USB-C, pick it under Tools → Port, then click the
+   **Upload** (→) button in the toolbar.
+7. Open Tools → Serial Monitor, set baud rate to **115200**.
 
 ## Things you may want to tweak
 
 - `ALARM_TEST_MINUTES` / `ALARM_DISPLAY_MS` / `DIAG_HOLD_MS` in
-  `src/main.cpp` — timing of the demo.
+  `src/main.cpp` (or `arduino/LilyGo-Test-Code/LilyGo-Test-Code.ino`,
+  they're the same code) — timing of the demo.
 - Battery voltage assumes a 2:1 resistor divider ahead of `BATT_PIN`
   (LilyGo's usual arrangement). Check against a multimeter once if you
   need accurate readings — the code prints the raw ADC-derived value
